@@ -1,0 +1,42 @@
+  body {
+    font-size: 16;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .inputContainer {
+    width: 100%;
+  }
+  
+  .inputContainer p, .resultContainer p {
+    font-size: 24px;;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .inputContainer input {
+    border: none;
+    border-bottom: solid black;
+    text-align: center;
+    font-size: 36px;
+    font-weight: bolder;
+    color: darkslategrey;
+    width: 150px;
+    margin: 0px auto;
+    display: block;
+  }
+
+  .resultContainer #result {
+    text-align: center;
+    font-size: 36px;
+    font-weight: bolder;
+    margin: 0px auto;
+    display: block;
+  }
+
+  .resultContainer #result.gain{
+    color: green;
+  }
+
+  .resultContainer #result.loss{
+    color: red;
+  }
