@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🇮🇸 冰島行程 V2</title>
+    <style>
+        :root {
+            --primary: #005eb8;
+            --accent: #d62828;
+            --bg: #f4f4f9;
+            --card-bg: #ffffff;
+            --text: #333;
+            --border-radius: 12px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 100px;
+        }
+
+        /* Header & Controls */
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+        
+        .toggle-edit {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .toggle-edit.active {
+            background: #fff;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .container { max-width: 600px; margin: 0 auto; padding: 10px; }
+
+        /* Date Group Header */
+        .date-header {
+            background: #eef2f5;
+            color: var(--primary);
+            padding: 10px 15px;
+            margin: 15px 0 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            position: sticky;
+            top: 60px;
+            z-index: 90;
+            border-left: 5px solid var(--primary);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            border-left: 4px solid transparent;
+        }
+        .card.type-住宿 { border-left-color: #9b59b6; }
+        .card.type-瀑布 { border-left-color: #3498db; }
+        .card.type-火山 { border-left-color: #e74c3c; }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .time-badge {
+            background: #eee;
+            color: #555;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: monospace;
+            font-weight: 600;
+        }
+        
+        /* Location Link Style */
+        .location-row {
+            display: flex;
+            align-items: center;
+            margin: 8px 0 4px 0;
+            cursor: pointer;
+        }
+        .location {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+        .search-icon {
+            margin-left: 8px;
+            font-size: 0.9rem;
+            color: var(--primary);
+            opacity: 0.7;
+        }
+        
+        .item-name { color: #666; font-size: 0.9rem; margin-bottom: 8px; }
+        .tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+        .tag { font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: #f0f0f0; color: #555; }
+        .tag.drive { background: #fff3cd; color: #856404; }
+
+        /* Remarks */
+        .remark-box {
+            margin-top: 8px;
+            padding: 8px;
+            background: #fffde7;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #444;
+            border: 1px dashed #e6e600;
+            min-height: 30px;
+        }
+        .remark-placeholder { color: #aaa; font-style: italic; }
+
+        /* Edit Controls (Hidden by default) */
+        .edit-controls {
+            display: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        body.edit-mode .edit-controls { display: flex; }
+        
+        .btn {
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .btn-up { background: #e3f2fd; color: #1565c0; }
+        .btn-down { background: #e3f2fd; color: #1565c0; }
+        .btn-del { background: #ffebee; color: #c62828; }
+        .btn-edit-content { background: #f3e5f5; color: #7b1fa2; }
+
+        /* Floating Add Button */
+        .fab-add {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 200;
+            display: none; /* Only in edit mode */
+        }
+        body.edit-mode .fab-add { display: flex; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white; padding: 20px; width: 90%; max-width: 400px;
+            border-radius: 12px; max-height: 90vh; overflow-y: auto;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 1rem;
+        }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 id="pageTitle">🇮🇸 冰島行程 V2</h1>
+    <button class="toggle-edit" onclick="toggleEditMode()">編輯模式</button>
+</header>
+
+<div id="app" class="container"></div>
+
+<!-- Floating Add Button -->
+<div class="fab-add" onclick="openAddModal()">➕</div>
+
+<!-- Edit/Add Modal -->
+<div id="itemModal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle">編輯行程</h3>
+        <div class="form-group">
+            <label>日期 (分組用)</label>
+            <input type="text" id="inpDate" placeholder="e.g. 5/1/2025">
+        </div>
+        <div class="form-group">
+            <label>時間</label>
+            <div style="display:flex; gap:5px">
+                <input type="text" id="inpArrTime" placeholder="抵達 (09:00)">
+                <input type="text" id="inpLeaveTime" placeholder="離開 (10:00)">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>地點 (Google Search 關鍵字)</label>
+            <input type="text" id="inpLocation">
+        </div>
+        <div class="form-group">
+            <label>項目名稱</label>
+            <input type="text" id="inpName">
+        </div>
+        <div class="form-group">
+            <label>備註 / Remarks</label>
+            <textarea id="inpRemark" rows="3"></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-del" onclick="closeModal()" style="background:#eee; color:#333">取消</button>
+            <button class="btn btn-up" onclick="saveItem()" style="background:var(--primary); color:white">儲存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initial Static Data (Backup)
+    const initialData = [
+        {"Date": "5/1/2025", "Arriving Time": "07:50", "Leaving Time": "09:00", "車程": "", "Location": "KEF airport", "項目": "KEF airport", "類型": "", "remarks": ""},
+        {"Date": "5/1/2025", "Arriving Time": "10:00", "Leaving Time": "12:00", "車程": "45 mins", "Location": "Ráðhúsið", "項目": "Reykjavik city tour", "類型": "城市", "remarks": ""},
+        {"Date": "5/1/2025", "Arriving Time": "14:00", "Leaving Time": "14:15", "車程": "1 hour 41 mins", "Location": "Hraunfossar", "項目": "Hraunfossar", "類型": "瀑布", "remarks": ""},
+        {"Date": "5/1/2025", "Arriving Time": "15:45", "Leaving Time": "16:00", "車程": "1 hour 19 mins", "Location": "Gerðuberg Cliffs", "項目": "Gerðuberg Cliffs", "類型": "石", "remarks": ""},
+        {"Date": "5/1/2025", "Arriving Time": "16:30", "Leaving Time": "16:45", "車程": "33 mins", "Location": "Ytri Tunga", "項目": "Ytri Tunga", "類型": "海豹", "remarks": ""},
+        {"Date": "5/1/2025", "Arriving Time": "17:15", "Leaving Time": "17:30", "車程": "34 mins", "Location": "Lóndrangar", "項目": "Lóndrangar", "類型": "石", "remarks": ""},
+        {"Date": "5/1/2025", "Arriving Time": "18:15", "Leaving Time": "18:30", "車程": "45 mins", "Location": "Kirkjufellsfoss", "項目": "Kirkjufellsfoss", "類型": "山", "remarks": ""},
+        {"Date": "5/1/2025", "Arriving Time": "", "Leaving Time": "", "車程": "33 mins", "Location": "Illugastadir seal watching", "項目": "Illugastadir seal watching", "類型": "海豹", "remarks": ""},
+        {"Date": "5/1/2025", "Arriving Time": "22:00", "Leaving Time": "", "車程": "2 hours 35 mins", "Location": "Hvammstangi", "項目": "Hvammstangi", "類型": "住宿", "remarks": ""},
+        {"Date": "5/2/2025", "Arriving Time": "10:30", "Leaving Time": "10:45", "車程": "2 hours 32 mins", "Location": "Hallandsnes, 606, Iceland", "項目": "Foss", "類型": "瀑布", "remarks": ""},
+        {"Date": "5/2/2025", "Arriving Time": "10:45", "Leaving Time": "11:15", "車程": "32 mins", "Location": "Goðafoss", "項目": "Goðafoss", "類型": "瀑布", "remarks": ""},
+        {"Date": "5/2/2025", "Arriving Time": "11:30", "Leaving Time": "12:30", "車程": "44 mins", "Location": "Dimmuborgir", "項目": "Dimmuborgir", "類型": "石", "remarks": ""},
+        {"Date": "5/2/2025", "Arriving Time": "14:30", "Leaving Time": "15:45", "車程": "10 mins", "Location": "Hverfell", "項目": "Hverfell", "類型": "火山", "remarks": ""},
+        {"Date": "5/2/2025", "Arriving Time": "", "Leaving Time": "", "車程": "10 mins", "Location": "Reykjahlíð", "項目": "Reykjahlíð", "類型": "住宿", "remarks": ""},
+        {"Date": "5/2/2025", "Arriving Time": "16:15", "Leaving Time": "17:30", "車程": "7 mins", "Location": "Hverir", "項目": "Hverir", "類型": "火山", "remarks": ""},
+        {"Date": "5/2/2025", "Arriving Time": "17:45", "Leaving Time": "18:00", "車程": "10 mins", "Location": "Víti", "項目": "Víti", "類型": "火山", "remarks": ""},
+        {"Date": "5/2/2025", "Arriving Time": "18:30", "Leaving Time": "19:30", "車程": "13 mins", "Location": "Mývatn Nature Baths", "項目": "Jarðböðin við Mývatn", "類型": "溫泉", "remarks": ""},
+        {"Date": "5/3/2025", "Arriving Time": "10:00", "Leaving Time": "10:45", "車程": "38 mins", "Location": "Dettifoss", "項目": "Dettifoss", "類型": "瀑布", "remarks": ""},
+        {"Date": "5/3/2025", "Arriving Time": "10:45", "Leaving Time": "12:00", "車程": "1 min", "Location": "Selfoss", "項目": "Selfoss", "類型": "瀑布", "remarks": ""},
+        {"Date": "5/3/2025", "Arriving Time": "14:00", "Leaving Time": "15:00", "車程": "1 hour 38 mins", "Location": "Stuðlagil Canyon", "項目": "Stuðlagil Canyon", "類型": "硤谷", "remarks": ""},
+        {"Date": "5/3/2025", "Arriving Time": "17:00", "Leaving Time": "17:15", "車程": "1 hour 47 mins", "Location": "Hafnarhólmi", "項目": "Hafnarhólmi", "類型": "雀", "remarks": ""},
+        {"Date": "5/3/2025", "Arriving Time": "17:45", "Leaving Time": "18:30", "車程": "22 mins", "Location": "Gufufoss", "項目": "Gufufoss", "類型": "瀑布", "remarks": ""},
+        {"Date": "5/3/2025", "Arriving Time": "19:30", "Leaving Time": "", "車程": "1 hour 4 mins", "Location": "Egilsstaðir", "項目": "Egilsstaðir", "類型": "住宿", "remarks": ""},
+        {"Date": "5/4/2025", "Arriving Time": "11:00", "Leaving Time": "11:15", "車程": "3 hours 25 mins", "Location": "Stokksnes", "項目": "Stokksnes", "類型": "天空之鏡", "remarks": ""},
+        {"Date": "5/4/2025", "Arriving Time": "12:30", "Leaving Time": "12:45", "車程": "1 hour 4 mins", "Location": "Diamond Beach", "項目": "Diamond Beach", "類型": "沙灘", "remarks": ""},
+        {"Date": "5/4/2025", "Arriving Time": "12:45", "Leaving Time": "13:00", "車程": "2 mins", "Location": "Jökulsárlón", "項目": "Jökulsárlón", "類型": "冰河湖", "remarks": ""},
+        {"Date": "5/4/2025", "Arriving Time": "13:15", "Leaving Time": "16:15", "車程": "14 mins", "Location": "Mulagljufur Canyon", "項目": "Mulagljufur Canyon", "類型": "硤谷", "remarks": ""},
+        {"Date": "5/4/2025", "Arriving Time": "17:00", "Leaving Time": "", "車程": "23 mins", "Location": "Hof", "項目": "Hof", "類型": "住宿", "remarks": ""},
+        {"Date": "5/5/2025", "Arriving Time": "09:20", "Leaving Time": "14:30", "車程": "19 mins", "Location": "Svínafellsjökull Glacier", "項目": "Svínafellsjökull Glacier", "類型": "冰川", "remarks": ""},
+        {"Date": "5/5/2025", "Arriving Time": "14:45", "Leaving Time": "15:45", "車程": "12 mins", "Location": "Svartifoss", "項目": "Svartifoss", "類型": "瀑布", "remarks": ""},
+        {"Date": "5/5/2025", "Arriving Time": "16:45", "Leaving Time": "17:45", "車程": "1 hour 1 min", "Location": "Fjaðrárgljúfur", "項目": "Fjaðrárgljúfur", "類型": "硤谷", "remarks": ""},
+        {"Date": "5/5/2025", "Arriving Time": "19:00", "Leaving Time": "", "車程": "49 mins", "Location": "Vik", "項目": "Vik", "類型": "住宿", "remarks": ""},
+        {"Date": "5/6/2025", "Arriving Time": "10:00", "Leaving Time": "10:30", "車程": "16 mins", "Location": "Dyrhólaey", "項目": "Dyrhólaey", "類型": "黑沙灘", "remarks": ""},
+        {"Date": "5/6/2025", "Arriving Time": "11:00", "Leaving Time": "12:00", "車程": "23 mins", "Location": "Skógafoss", "項目": "Skógafoss", "類型": "瀑布", "remarks": ""},
+        {"Date": "5/6/2025", "Arriving Time": "12:30", "Leaving Time": "12:45", "車程": "28 mins", "Location": "Seljalandsfoss", "項目": "Seljalandsfoss", "類型": "瀑布", "remarks": ""},
+        {"Date": "5/6/2025", "Arriving Time": "12:50", "Leaving Time": "13:00", "車程": "3 mins", "Location": "Gljúfrabúi", "項目": "Gljúfrabúi", "類型": "瀑布", "remarks": ""},
+        {"Date": "5/6/2025", "Arriving Time": "14:30", "Leaving Time": "15:00", "車程": "1 hour 18 mins", "Location": "Efstidalur II", "項目": "Efstidalur II", "類型": "住宿", "remarks": ""},
+        {"Date": "5/6/2025", "Arriving Time": "15:10", "Leaving Time": "15:40", "車程": "10 mins", "Location": "Brúarfoss", "項目": "Brúarfoss", "類型": "瀑布", "remarks": ""},
+        {"Date": "5/6/2025", "Arriving Time": "16:00", "Leaving Time": "16:30", "車程": "22 mins", "Location": "Strokkur Geyser", "項目": "Strokkur Geyser", "類型": "間歇噴泉", "remarks": ""},
+        {"Date": "5/6/2025", "Arriving Time": "16:40", "Leaving Time": "17:10", "車程": "10 mins", "Location": "Gullfoss", "項目": "Gullfoss", "類型": "瀑布", "remarks": ""},
+        {"Date": "5/7/2025", "Arriving Time": "09:00", "Leaving Time": "12:00", "車程": "47 mins", "Location": "Thingvellir National Park", "項目": "Þingvellir", "類型": "地質公園", "remarks": ""},
+        {"Date": "5/7/2025", "Arriving Time": "13:00", "Leaving Time": "16:00", "車程": "45 mins", "Location": "Glymur Waterfall", "項目": "Glymur Waterfall", "類型": "硤谷瀑布", "remarks": ""},
+        {"Date": "5/7/2025", "Arriving Time": "17:15", "Leaving Time": "", "車程": "1 hour 7 mins", "Location": "Reykjavík", "項目": "", "類型": "住宿", "remarks": ""},
+        {"Date": "5/8/2025", "Arriving Time": "08:30", "Leaving Time": "11:30", "車程": "37 mins", "Location": "Inside the Volcano", "項目": "Inside the Volcano", "類型": "火山", "remarks": ""},
+        {"Date": "5/8/2025", "Arriving Time": "12:00", "Leaving Time": "15:00", "車程": "36 mins", "Location": "Reykjadalur", "項目": "Reykjadalur Hot Spring", "類型": "溫泉河", "remarks": ""},
+        {"Date": "5/8/2025", "Arriving Time": "16:00", "Leaving Time": "19:00", "車程": "1 hour 0 mins", "Location": "Fagradalsfjall Volcano", "項目": "Fagradalsfjall Volcano", "類型": "火山", "remarks": ""},
+        {"Date": "5/8/2025", "Arriving Time": "", "Leaving Time": "", "車程": "31 mins", "Location": "Keflavík Airport", "項目": "Keflavík Airport", "類型": "住宿", "remarks": ""}
+    ];
+
+    // Storage Key
+    const STORAGE_KEY = 'iceland_trip_data_v2';
+    
+    // Global State
+    let itinerary = [];
+    let isEditMode = false;
+    let editingIndex = -1;
+
+    // Load Data
+    function loadData() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                itinerary = JSON.parse(saved);
+            } catch(e) {
+                console.error("Parse error, loading initial", e);
+                itinerary = JSON.parse(JSON.stringify(initialData));
+            }
+        } else {
+            // Deep copy initial data
+            itinerary = JSON.parse(JSON.stringify(initialData));
+        }
+    }
+
+    function saveData() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(itinerary));
+    }
+
+    // Actions
+    function toggleEditMode() {
+        isEditMode = !isEditMode;
+        document.body.classList.toggle('edit-mode', isEditMode);
+        const btn = document.querySelector('.toggle-edit');
+        btn.classList.toggle('active', isEditMode);
+        btn.innerText = isEditMode ? '完成編輯' : '編輯模式';
+    }
+
+    function deleteItem(index) {
+        if(confirm('確定要刪除此行程嗎？')) {
+            itinerary.splice(index, 1);
+            saveData();
+            render();
+        }
+    }
+
+    function moveItem(index, direction) {
+        // direction: -1 for up, 1 for down
+        const newIndex = index + direction;
+        if (newIndex < 0 || newIndex >= itinerary.length) return;
+
+        // Swap
+        const temp = itinerary[index];
+        itinerary[index] = itinerary[newIndex];
+        itinerary[newIndex] = temp;
+        
+        saveData();
+        render();
+    }
+
+    function searchLocation(loc) {
+        if(!loc) return;
+        const query = encodeURIComponent(loc);
+        window.open(`https://www.google.com/search?q=${query}`, '_blank');
+    }
+
+    // Modal Logic
+    function openAddModal() {
+        editingIndex = -1; // -1 means adding new
+        document.getElementById('modalTitle').innerText = "新增行程";
+        
+        // Guess date from last item
+        const lastItem = itinerary[itinerary.length - 1];
+        document.getElementById('inpDate').value = lastItem ? lastItem.Date : "5/1/2025";
+        
+        document.getElementById('inpArrTime').value = "";
+        document.getElementById('inpLeaveTime').value = "";
+        document.getElementById('inpLocation').value = "";
+        document.getElementById('inpName').value = "";
+        document.getElementById('inpRemark').value = "";
+        
+        document.getElementById('itemModal').classList.add('active');
+    }
+
+    function openEditModal(index) {
+        editingIndex = index;
+        const item = itinerary[index];
+        document.getElementById('modalTitle').innerText = "修改行程內容";
+        
+        document.getElementById('inpDate').value = item.Date || "";
+        document.getElementById('inpArrTime').value = item['Arriving Time'] || "";
+        document.getElementById('inpLeaveTime').value = item['Leaving Time'] || "";
+        document.getElementById('inpLocation').value = item.Location || "";
+        document.getElementById('inpName').value = item['項目'] || "";
+        document.getElementById('inpRemark').value = item.remarks || "";
+        
+        document.getElementById('itemModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('itemModal').classList.remove('active');
+    }
+
+    function saveItem() {
+        const date = document.getElementById('inpDate').value;
+        const loc = document.getElementById('inpLocation').value;
+        if(!date || !loc) {
+            alert("日期和地點是必填的");
+            return;
+        }
+
+        const newItem = {
+            "Date": date,
+            "Arriving Time": document.getElementById('inpArrTime').value,
+            "Leaving Time": document.getElementById('inpLeaveTime').value,
+            "Location": loc,
+            "項目": document.getElementById('inpName').value,
+            "remarks": document.getElementById('inpRemark').value,
+            "類型": "自訂", 
+            "車程": ""
+        };
+
+        if(editingIndex === -1) {
+            // Add new
+            itinerary.push(newItem);
+        } else {
+            // Update existing
+            // Keep existing fields like '車程' if we didn't edit them, but here we simplify
+            const oldItem = itinerary[editingIndex];
+            itinerary[editingIndex] = { ...oldItem, ...newItem };
+        }
+        
+        saveData();
+        render();
+        closeModal();
+    }
+
+    // Render
+    function render() {
+        const app = document.getElementById('app');
+        app.innerHTML = '';
+        
+        let lastDate = '';
+
+        itinerary.forEach((item, index) => {
+            // Date Header
+            if (item.Date !== lastDate) {
+                const dateHeader = document.createElement('div');
+                dateHeader.className = 'date-header';
+                dateHeader.innerText = `📅 ${item.Date}`;
+                app.appendChild(dateHeader);
+                lastDate = item.Date;
+            }
+
+            const card = document.createElement('div');
+            card.className = `card type-${item['類型'] || 'default'}`;
+            
+            // Time display
+            let timeDisplay = item['Arriving Time'] || '--:--';
+            if(item['Leaving Time']) timeDisplay += ` - ${item['Leaving Time']}`;
+
+            // HTML Structure
+            card.innerHTML = `
+                <div class="card-header">
+                    <span class="time-badge">${timeDisplay}</span>
+                </div>
+                
+                <div class="location-row" onclick="searchLocation('${item.Location.replace(/'/g, "\\'")}')">
+                    <div class="location">${item.Location}</div>
+                    <div class="search-icon">🔍</div>
+                </div>
+                
+                <div class="item-name">${item['項目'] || ''}</div>
+                
+                <div class="tags">
+                    ${item['類型'] ? `<span class="tag">${item['類型']}</span>` : ''}
+                    ${item['車程'] ? `<span class="tag drive">🚗 ${item['車程']}</span>` : ''}
+                </div>
+
+                <div class="remark-box" onclick="openEditModal(${index})">
+                    ${item.remarks ? item.remarks : '<span class="remark-placeholder">點擊輸入備註...</span>'}
+                </div>
+
+                <div class="edit-controls">
+                    <button class="btn btn-edit-content" onclick="openEditModal(${index})">✏️ 內容</button>
+                    <button class="btn btn-up" onclick="moveItem(${index}, -1)">⬆️</button>
+                    <button class="btn btn-down" onclick="moveItem(${index}, 1)">⬇️</button>
+                    <button class="btn btn-del" onclick="deleteItem(${index})">🗑️</button>
+                </div>
+            `;
+            app.appendChild(card);
+        });
+    }
+
+    // Start
+    loadData();
+    render();
+    
+    // Close modal click outside
+    window.onclick = function(ev) {
+        if(ev.target == document.getElementById('itemModal')) closeModal();
+    }
+
+</script>
+
+</body>
+</html>
