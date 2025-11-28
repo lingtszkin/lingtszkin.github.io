@@ -1,0 +1,68 @@
+{
+	"1": {
+		"Result": "OK",
+		"Message": "",
+		"bus_arr": [
+			{
+				"dest": "竹園邨"
+			}
+		],
+		"Records": [
+			{
+				"sec_routeno": "1A",
+				"sec_dest": "中秀茂坪",
+				"xchange": "尖沙咀轉車站 - 中間道 (YT102)",
+				"validity": "@",
+				"detail": "--",
+				"discount_max": "減 $4.2",
+				"success_cnt": "1",
+				"spec_remark_eng": "",
+				"spec_remark_chi": ""
+			},
+			{
+				"sec_routeno": "2",
+				"sec_dest": "長沙灣(蘇屋邨)",
+				"xchange": "尖沙咀轉車站 - 中間道 (YT102)",
+				"validity": "@",
+				"detail": "--",
+				"discount_max": "減 $4.2",
+				"success_cnt": "1",
+				"spec_remark_eng": "",
+				"spec_remark_chi": ""
+			}
+		]
+	},
+	"1A": {
+		"Result": "OK",
+		"Message": "",
+		"bus_arr": [
+			{
+				"dest": "中秀茂坪"
+			}
+		],
+		"Records": [
+			{
+				"sec_routeno": "1",
+				"sec_dest": "竹園邨",
+				"xchange": "尖沙咀轉車站 - 中間道 (YT102)",
+				"validity": "@",
+				"detail": "--",
+				"discount_max": "減 $4.2",
+				"success_cnt": "1",
+				"spec_remark_eng": "",
+				"spec_remark_chi": ""
+			},
+			{
+				"sec_routeno": "2",
+				"sec_dest": "長沙灣(蘇屋邨)",
+				"xchange": "尖沙咀轉車站 - 中間道 (YT102)",
+				"validity": "@",
+				"detail": "--",
+				"discount_max": "減 $4.2",
+				"success_cnt": "1",
+				"spec_remark_eng": "",
+				"spec_remark_chi": ""
+			}
+		]
+	}
+}

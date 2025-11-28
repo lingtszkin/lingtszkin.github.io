@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>九巴轉乘優惠查詢系統</title>
+    <style>
+        :root {
+            --primary-color: #e30000; /* KMB Red */
+            --secondary-color: #f4f4f4;
+            --border-color: #ddd;
+            --link-color: #0056b3;
+        }
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        h1, h2 { color: var(--primary-color); }
+        
+        /* File Loader Section */
+        .file-loader {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .status-ok { color: green; font-weight: bold; }
+        .status-err { color: red; font-weight: bold; }
+
+        /* Tabs */
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid var(--primary-color); }
+        .tab-btn {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            color: #666;
+        }
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 4px 4px 0 0;
+        }
+
+        /* Input Section */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 200px;
+        }
+        button.action-btn {
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button.action-btn:hover { background-color: #c20000; }
+
+        /* Results Table */
+        .result-section { display: none; }
+        .result-section.active { display: block; }
+        
+        .route-info-header {
+            background: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .data-table-wrapper {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: var(--secondary-color);
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover { background-color: #fffdf0; }
+
+        /* Link Styling */
+        a.kmb-link {
+            color: var(--link-color);
+            text-decoration: none;
+            font-weight: bold;
+            border-bottom: 1px dotted var(--link-color);
+        }
+        a.kmb-link:hover {
+            text-decoration: underline;
+            color: var(--primary-color);
+        }
+        a.kmb-link::after {
+            content: " 🔗";
+            font-size: 0.8em;
+            opacity: 0.5;
+        }
+        
+        .filter-bar {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #eee;
+            border-radius: 4px;
+        }
+
+        /* AutoComplete */
+        datalist { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚌 九巴轉乘優惠查詢</h1>
+
+    <!-- Data Loading Section -->
+    <div class="file-loader" id="fileLoaderSection">
+        <h3>資料來源設定</h3>
+        <p>請確保 f1.json, f2.json, b1.json, b2.json 與此網頁在同一資料夾。</p>
+        <p id="loadStatus">狀態: 等待載入...</p>
+        <div id="manualLoad" style="display:none;">
+            <p>⚠️ 無法自動讀取 (可能是瀏覽器 CORS 安全限制)。請手動選取那 4 個 JSON 檔案：</p>
+            <input type="file" id="fileInput" multiple accept=".json">
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchMode('single')">單一路線查詢</button>
+        <button class="tab-btn" onclick="switchMode('pair')">點對點轉乘檢查</button>
+    </div>
+
+    <!-- Mode 1: Single Route Search -->
+    <div id="mode-single" class="search-mode">
+        <div class="search-box">
+            <input type="text" id="routeInput" list="routeList" placeholder="輸入路線 (例: 1A)">
+            <button class="action-btn" onclick="searchSingleRoute()">查詢轉乘</button>
+        </div>
+        <div id="singleResult" class="result-container"></div>
+    </div>
+
+    <!-- Mode 2: Pair Route Search -->
+    <div id="mode-pair" class="search-mode" style="display:none;">
+        <div class="search-box">
+            <input type="text" id="routeA" list="routeList" placeholder="第一程路線 (例: 1)">
+            <span style="align-self: center;">+</span>
+            <input type="text" id="routeB" list="routeList" placeholder="第二程路線 (例: 1A)">
+            <button class="action-btn" onclick="checkPairDiscount()">檢查優惠</button>
+        </div>
+        <div id="pairResult" class="result-container"></div>
+    </div>
+
+    <!-- Datalist for Typeahead -->
+    <datalist id="routeList"></datalist>
+
+</div>
+
+<script>
+    // Global Data Store
+    const DB = {
+        f1: {}, // Outbound -> Others
+        f2: {}, // Others -> Outbound
+        b1: {}, // Return -> Others
+        b2: {}  // Others -> Return
+    };
+    let allRoutes = new Set();
+
+    // --- Helper to generate KMB Link ---
+    function getKmbLink(routeNo) {
+        if (!routeNo) return '';
+        // Remove any non-alphanumeric characters if necessary, but usually routeNo is clean
+        const cleanRoute = routeNo.trim(); 
+        const url = `https://search.kmb.hk/KMBWebSite/?action=routesearch&route=${encodeURIComponent(cleanRoute)}&lang=zh-hk`;
+        return `<a href="${url}" target="_blank" class="kmb-link" title="前往九巴官網查看 ${cleanRoute} 資料">${cleanRoute}</a>`;
+    }
+
+    // --- Initialization ---
+    window.onload = async () => {
+        const files = ['f1.json', 'f2.json', 'b1.json', 'b2.json'];
+        try {
+            // Try fetching automatically (Works if on a web server)
+            const promises = files.map(f => fetch(f).then(res => {
+                if(!res.ok) throw new Error("404");
+                return res.json();
+            }));
+            const results = await Promise.all(promises);
+            DB.f1 = results[0];
+            DB.f2 = results[1];
+            DB.b1 = results[2];
+            DB.b2 = results[3];
+            
+            processData();
+            document.getElementById('loadStatus').innerHTML = '<span class="status-ok">✅ 資料已自動載入</span>';
+        } catch (e) {
+            // Fallback to manual file input
+            console.log("Auto-fetch failed, requesting manual input.", e);
+            document.getElementById('loadStatus').innerHTML = '<span class="status-err">❌ 無法自動讀取檔案 (請手動選擇)</span>';
+            document.getElementById('manualLoad').style.display = 'block';
+        }
+    };
+
+    // Handle manual file upload
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        const readJSON = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve({ name: file.name, data: JSON.parse(e.target.result) });
+            reader.onerror = reject;
+            reader.readAsText(file);
+        });
+
+        try {
+            const loaded = await Promise.all(files.map(readJSON));
+            loaded.forEach(item => {
+                if(item.name.includes('f1')) DB.f1 = item.data;
+                if(item.name.includes('f2')) DB.f2 = item.data;
+                if(item.name.includes('b1')) DB.b1 = item.data;
+                if(item.name.includes('b2')) DB.b2 = item.data;
+            });
+            processData();
+            document.getElementById('loadStatus').innerHTML = `<span class="status-ok">✅ 已手動載入 ${files.length} 個檔案</span>`;
+            document.getElementById('manualLoad').style.display = 'none';
+        } catch (err) {
+            alert("檔案讀取錯誤，請檢查格式");
+        }
+    });
+
+    function processData() {
+        // Extract all route numbers for typeahead
+        allRoutes = new Set([
+            ...Object.keys(DB.f1), ...Object.keys(DB.f2), 
+            ...Object.keys(DB.b1), ...Object.keys(DB.b2)
+        ]);
+        const datalist = document.getElementById('routeList');
+        datalist.innerHTML = '';
+        // Sort and add to datalist
+        Array.from(allRoutes).sort().forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r;
+            datalist.appendChild(opt);
+        });
+    }
+
+    function switchMode(mode) {
+        document.getElementById('mode-single').style.display = mode === 'single' ? 'block' : 'none';
+        document.getElementById('mode-pair').style.display = mode === 'pair' ? 'block' : 'none';
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    // --- Feature 1: Single Route Search ---
+    function searchSingleRoute() {
+        const route = document.getElementById('routeInput').value.trim().toUpperCase();
+        const container = document.getElementById('singleResult');
+        container.innerHTML = '';
+
+        if (!route) return;
+
+        // Helper to get destination
+        const getDest = (dataset, r) => dataset[r]?.bus_arr?.[0]?.dest || "未知";
+        
+        // Title with link for the searched route itself
+        const searchedRouteLink = getKmbLink(route);
+
+        // Render 4 tables
+        const sections = [
+            { title: `去程 (${searchedRouteLink} 往${getDest(DB.f1, route)}) -> 轉乘其他`, data: DB.f1[route], type: 'f1' },
+            { title: `其他 -> 轉乘去程 (${searchedRouteLink} 往${getDest(DB.f1, route)})`, data: DB.f2[route], type: 'f2' },
+            { title: `回程 (${searchedRouteLink} 往${getDest(DB.b1, route)}) -> 轉乘其他`, data: DB.b1[route], type: 'b1' },
+            { title: `其他 -> 轉乘回程 (${searchedRouteLink} 往${getDest(DB.b1, route)})`, data: DB.b2[route], type: 'b2' }
+        ];
+
+        let html = `<div class="filter-bar">🔍 結果篩選: <input type="text" id="tableFilter" placeholder="輸入車站或路線號碼..." onkeyup="filterTables()"></div>`;
+
+        sections.forEach(sec => {
+            if (!sec.data || !sec.data.Records) return;
+            
+            html += `<div class="route-info-header"><h3>${sec.title}</h3></div>`;
+            html += `<div class="data-table-wrapper"><table class="transfer-table">`;
+            html += `<thead><tr>
+                        <th>次程路線</th>
+                        <th>目的地</th>
+                        <th>轉乘站</th>
+                        <th>優惠</th>
+                        <th>備註</th>
+                    </tr></thead><tbody>`;
+            
+            sec.data.Records.forEach(rec => {
+                // Apply Link to Second Route
+                const routeLink = getKmbLink(rec.sec_routeno);
+                
+                html += `<tr>
+                            <td>${routeLink}</td>
+                            <td>${rec.sec_dest}</td>
+                            <td>${rec.xchange}</td>
+                            <td style="color: red; font-weight: bold;">${rec.discount_max}</td>
+                            <td>${rec.detail !== '--' ? rec.detail : ''}</td>
+                         </tr>`;
+            });
+            html += `</tbody></table></div>`;
+        });
+
+        if (html === '') {
+            container.innerHTML = '<p>找不到此路線資料。</p>';
+        } else {
+            container.innerHTML = html;
+        }
+    }
+
+    // --- Feature 3: Table Filter ---
+    window.filterTables = function() {
+        const term = document.getElementById('tableFilter').value.toLowerCase();
+        const rows = document.querySelectorAll('.transfer-table tbody tr');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(term) ? '' : 'none';
+        });
+    }
+
+    // --- Feature 2: Pair Check ---
+    function checkPairDiscount() {
+        const rA = document.getElementById('routeA').value.trim().toUpperCase();
+        const rB = document.getElementById('routeB').value.trim().toUpperCase();
+        const container = document.getElementById('pairResult');
+        container.innerHTML = '';
+
+        if (!rA || !rB) return;
+
+        let matches = [];
+        
+        // Links for display
+        const linkA = getKmbLink(rA);
+        const linkB = getKmbLink(rB);
+
+        // Check A -> B
+        if (DB.f1[rA]) findMatch(DB.f1[rA], rB, `去程 ${linkA} 轉 ${linkB}`, matches);
+        if (DB.b1[rA]) findMatch(DB.b1[rA], rB, `回程 ${linkA} 轉 ${linkB}`, matches);
+        
+        // Check B -> A
+        if (DB.f1[rB]) findMatch(DB.f1[rB], rA, `去程 ${linkB} 轉 ${linkA}`, matches);
+        if (DB.b1[rB]) findMatch(DB.b1[rB], rA, `回程 ${linkB} 轉 ${linkA}`, matches);
+
+        if (matches.length === 0) {
+            container.innerHTML = `<p>沒有發現 ${linkA} 與 ${linkB} 之間的直接轉乘優惠。</p>`;
+        } else {
+            let html = '<h3>找到以下優惠組合：</h3><div class="data-table-wrapper"><table><thead><tr><th>組合</th><th>轉乘站</th><th>優惠</th><th>備註</th></tr></thead><tbody>';
+            matches.forEach(m => {
+                html += `<tr>
+                            <td>${m.desc}</td>
+                            <td>${m.rec.xchange}</td>
+                            <td style="color:red;font-weight:bold;">${m.rec.discount_max}</td>
+                            <td>${m.rec.detail}</td>
+                         </tr>`;
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+    }
+
+    function findMatch(routeData, targetRoute, desc, results) {
+        if (!routeData.Records) return;
+        routeData.Records.forEach(rec => {
+            if (rec.sec_routeno === targetRoute) {
+                results.push({ desc: desc, rec: rec });
+            }
+        });
+    }
+
+</script>
+
+</body>
+</html>
