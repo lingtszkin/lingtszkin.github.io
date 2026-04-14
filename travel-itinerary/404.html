@@ -4,7 +4,10 @@
   <meta charset="utf-8">
   <script>
     // GitHub Pages SPA redirect: store the path and redirect to index
-    const path = window.location.pathname.replace('/travel-itinerary', '') || '/'
+    const base = '/travel-itinerary'
+    const path = window.location.pathname.startsWith(base)
+      ? window.location.pathname.slice(base.length) || '/'
+      : window.location.pathname
     sessionStorage.setItem('spa-redirect', path + window.location.search)
     window.location.replace('/travel-itinerary/')
   </script>
