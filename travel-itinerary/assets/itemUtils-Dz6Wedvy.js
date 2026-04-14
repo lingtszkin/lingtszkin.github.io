@@ -1,0 +1,1 @@
+function e(e){return[...e].sort((e,t)=>e.date<t.date?-1:e.date>t.date?1:e.time===t.time?0:e.time===null?1:t.time===null||e.time<t.time?-1:1)}function t(t){let n=e(t),r=[];for(let e of n){let t=r.at(-1);t&&t.date===e.date?t.items.push(e):r.push({date:e.date,items:[e]})}return r}export{t};
