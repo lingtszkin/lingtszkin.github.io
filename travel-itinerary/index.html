@@ -6,18 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Travel Itinerary</title>
     <script>
-      // Handle GitHub Pages SPA redirect from 404.html
-      const redirect = sessionStorage.getItem('spa-redirect')
-      if (redirect) {
-        sessionStorage.removeItem('spa-redirect')
-        history.replaceState(null, '', '/travel-itinerary' + redirect)
-      }
+      // Restore path saved by 404.html redirect
+      (function() {
+        var redirect = sessionStorage.getItem('spa-redirect')
+        if (redirect) {
+          sessionStorage.removeItem('spa-redirect')
+          // Ensure the path starts with /
+          var path = redirect.charAt(0) === '/' ? redirect : '/' + redirect
+          history.replaceState(null, '', '/travel-itinerary' + path)
+        }
+      })()
     </script>
-    <script type="module" crossorigin src="/travel-itinerary/assets/index-CDroAxPQ.js"></script>
-    <link rel="modulepreload" crossorigin href="/travel-itinerary/assets/_plugin-vue_export-helper-Czn6qoCo.js">
-    <link rel="modulepreload" crossorigin href="/travel-itinerary/assets/runtime-dom.esm-bundler-C6l_32U_.js">
-    <link rel="modulepreload" crossorigin href="/travel-itinerary/assets/auth.store-Dq9of7rE.js">
-    <link rel="stylesheet" crossorigin href="/travel-itinerary/assets/index-DfFryeht.css">
+    <script type="module" crossorigin src="/travel-itinerary/assets/index-B933aLSI.js"></script>
+    <link rel="modulepreload" crossorigin href="/travel-itinerary/assets/_plugin-vue_export-helper-Bqc6QJRT.js">
+    <link rel="modulepreload" crossorigin href="/travel-itinerary/assets/runtime-dom.esm-bundler-B0LO8ZrB.js">
+    <link rel="modulepreload" crossorigin href="/travel-itinerary/assets/auth.store-DNoo-_A7.js">
+    <link rel="stylesheet" crossorigin href="/travel-itinerary/assets/index-Cc7EKyjd.css">
   </head>
   <body>
     <div id="app"></div>

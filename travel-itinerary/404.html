@@ -2,14 +2,18 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <title>Travel Itinerary</title>
   <script>
-    // GitHub Pages SPA redirect: store the path and redirect to index
-    const base = '/travel-itinerary'
-    const path = window.location.pathname.startsWith(base)
-      ? window.location.pathname.slice(base.length) || '/'
-      : window.location.pathname
-    sessionStorage.setItem('spa-redirect', path + window.location.search)
-    window.location.replace('/travel-itinerary/')
+    // GitHub Pages SPA redirect trick
+    // Stores the full path after the base and redirects to the app root
+    var base = '/travel-itinerary'
+    var loc = window.location
+    var path = loc.pathname.startsWith(base)
+      ? loc.pathname.slice(base.length) || '/'
+      : loc.pathname
+    var redirect = path + loc.search + loc.hash
+    sessionStorage.setItem('spa-redirect', redirect)
+    loc.replace(base + '/')
   </script>
 </head>
 <body></body>
